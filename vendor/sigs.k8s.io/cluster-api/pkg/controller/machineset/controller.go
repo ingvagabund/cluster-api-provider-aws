@@ -48,6 +48,9 @@ var stateConfirmationTimeout = 10 * time.Second
 // The polling is against a local memory cache.
 var stateConfirmationInterval = 100 * time.Millisecond
 
+// machineDeleteAnnotationKey annotates machines to be delete among first ones
+var machineDeleteAnnotationKey = "sigs.k8s.io/cluster-api-delete-machine"
+
 // +controller:group=cluster,version=v1alpha1,kind=MachineSet,resource=machinesets
 type MachineSetControllerImpl struct {
 	builders.DefaultControllerFns
@@ -325,7 +328,24 @@ func (c *MachineSetControllerImpl) enqueueAfter(machineSet *v1alpha1.MachineSet,
 func getMachinesToDelete(filteredMachines []*v1alpha1.Machine, diff int) []*v1alpha1.Machine {
 	// TODO: Define machines deletion policies.
 	// see: https://github.com/kubernetes/kube-deploy/issues/625
-	return filteredMachines[:diff]
+
+	// First delete all machines with sigs.k8s.io/cluster-api-delete-machine annotation
+	var machinesToDelete []*v1alpha1.Machine
+	var remainingMachines []*v1alpha1.Machine
+	for _, machine := range filteredMachines {
+		if _, delete := machine.Annotations[machineDeleteAnnotationKey]; delete {
+			machinesToDelete = append(machinesToDelete, machine)
+		} else {
+			remainingMachines = append(remainingMachines, machine)
+		}
+	}
+
+	machinesToDeleteLen := len(machinesToDelete)
+	if machinesToDeleteLen >= diff {
+		return machinesToDelete[:diff]
+	}
+
+	return append(machinesToDelete, remainingMachines[:(diff-machinesToDeleteLen)]...)
 }
 
 func (c *MachineSetControllerImpl) waitForMachineCreation(machineList []*v1alpha1.Machine) error {
