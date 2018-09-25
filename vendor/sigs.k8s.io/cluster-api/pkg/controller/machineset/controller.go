@@ -18,6 +18,7 @@ package machineset
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -120,7 +121,8 @@ func (c *MachineSetControllerImpl) Reconcile(machineSet *v1alpha1.MachineSet) er
 	}
 
 	// Filter out irrelevant machines (deleting/mismatch labels) and claim orphaned machines.
-	var filteredMachines []*v1alpha1.Machine
+	var machineNames []string
+	machineSetMachines := make(map[string]*v1alpha1.Machine)
 	for _, machine := range allMachines {
 		if shouldExcludeMachine(machineSet, machine) {
 			continue
@@ -132,7 +134,16 @@ func (c *MachineSetControllerImpl) Reconcile(machineSet *v1alpha1.MachineSet) er
 				continue
 			}
 		}
-		filteredMachines = append(filteredMachines, machine)
+		machineNames = append(machineNames, machine.Name)
+		machineSetMachines[machine.Name] = machine
+	}
+
+	// sort the filteredMachines from the oldest to the youngest
+	sort.Strings(machineNames)
+
+	var filteredMachines []*v1alpha1.Machine
+	for _, machineName := range machineNames {
+		filteredMachines = append(filteredMachines, machineSetMachines[machineName])
 	}
 
 	syncErr := c.syncReplicas(machineSet, filteredMachines)
