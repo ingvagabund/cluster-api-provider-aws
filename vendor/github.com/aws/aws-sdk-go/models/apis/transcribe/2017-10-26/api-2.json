@@ -28,19 +28,6 @@
         {"shape":"ConflictException"}
       ]
     },
-    "DeleteTranscriptionJob":{
-      "name":"DeleteTranscriptionJob",
-      "http":{
-        "method":"POST",
-        "requestUri":"/"
-      },
-      "input":{"shape":"DeleteTranscriptionJobRequest"},
-      "errors":[
-        {"shape":"LimitExceededException"},
-        {"shape":"BadRequestException"},
-        {"shape":"InternalFailureException"}
-      ]
-    },
     "DeleteVocabulary":{
       "name":"DeleteVocabulary",
       "http":{
@@ -185,13 +172,6 @@
       }
     },
     "DateTime":{"type":"timestamp"},
-    "DeleteTranscriptionJobRequest":{
-      "type":"structure",
-      "required":["TranscriptionJobName"],
-      "members":{
-        "TranscriptionJobName":{"shape":"TranscriptionJobName"}
-      }
-    },
     "DeleteVocabularyRequest":{
       "type":"structure",
       "required":["VocabularyName"],
@@ -243,10 +223,7 @@
       "type":"string",
       "enum":[
         "en-US",
-        "es-US",
-        "en-AU",
-        "fr-CA",
-        "en-UK"
+        "es-US"
       ]
     },
     "LimitExceededException":{

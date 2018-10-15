@@ -15,14 +15,13 @@ import (
 	"go/scanner"
 	"go/token"
 	"go/types"
-	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
-	"runtime"
 	"sync"
 
 	"golang.org/x/tools/go/gcexportdata"
+	"io/ioutil"
+	"path/filepath"
 )
 
 // A LoadMode specifies the amount of detail to return when loading.
@@ -682,14 +681,6 @@ func (ld *loader) loadPackage(lpkg *loaderPackage) {
 		panic("unreachable")
 	})
 
-	// This is only an approximation.
-	// TODO(adonovan): derive Sizes from the underlying build system.
-	goarch := runtime.GOARCH
-	if x, ok := os.LookupEnv("GOARCH"); ok {
-		goarch = x
-	}
-	sizes := types.SizesFor("gc", goarch)
-
 	// type-check
 	tc := &types.Config{
 		Importer: importer,
@@ -700,7 +691,9 @@ func (ld *loader) loadPackage(lpkg *loaderPackage) {
 		IgnoreFuncBodies: ld.Mode < LoadAllSyntax && !lpkg.initial,
 
 		Error: appendError,
-		Sizes: sizes,
+
+		// TODO(adonovan): derive Sizes from the underlying
+		// build system.
 	}
 	types.NewChecker(tc, ld.Fset, lpkg.Types, lpkg.TypesInfo).Files(lpkg.Syntax)
 

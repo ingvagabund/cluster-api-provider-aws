@@ -6,7 +6,6 @@
     "jsonVersion":"1.1",
     "protocol":"json",
     "serviceFullName":"AWS Direct Connect",
-    "serviceId":"Direct Connect",
     "signatureVersion":"v4",
     "targetPrefix":"OvertureService",
     "uid":"directconnect-2012-10-25"
@@ -587,19 +586,6 @@
         {"shape":"DirectConnectServerException"},
         {"shape":"DirectConnectClientException"}
       ]
-    },
-    "UpdateVirtualInterfaceAttributes":{
-      "name":"UpdateVirtualInterfaceAttributes",
-      "http":{
-        "method":"POST",
-        "requestUri":"/"
-      },
-      "input":{"shape":"UpdateVirtualInterfaceAttributesRequest"},
-      "output":{"shape":"VirtualInterface"},
-      "errors":[
-        {"shape":"DirectConnectServerException"},
-        {"shape":"DirectConnectClientException"}
-      ]
     }
   },
   "shapes":{
@@ -804,7 +790,6 @@
         "loaIssueTime":{"shape":"LoaIssueTime"},
         "lagId":{"shape":"LagId"},
         "awsDevice":{"shape":"AwsDevice"},
-        "jumboFrameCapable":{"shape":"JumboFrameCapable"},
         "awsDeviceV2":{"shape":"AwsDeviceV2"}
       }
     },
@@ -1285,7 +1270,6 @@
         "loaIssueTime":{"shape":"LoaIssueTime"},
         "lagId":{"shape":"LagId"},
         "awsDevice":{"shape":"AwsDevice"},
-        "jumboFrameCapable":{"shape":"JumboFrameCapable"},
         "awsDeviceV2":{"shape":"AwsDeviceV2"}
       }
     },
@@ -1312,7 +1296,6 @@
         "interconnects":{"shape":"InterconnectList"}
       }
     },
-    "JumboFrameCapable":{"type":"boolean"},
     "Lag":{
       "type":"structure",
       "members":{
@@ -1328,8 +1311,7 @@
         "awsDevice":{"shape":"AwsDevice"},
         "awsDeviceV2":{"shape":"AwsDeviceV2"},
         "connections":{"shape":"ConnectionList"},
-        "allowsHostedConnections":{"shape":"BooleanFlag"},
-        "jumboFrameCapable":{"shape":"JumboFrameCapable"}
+        "allowsHostedConnections":{"shape":"BooleanFlag"}
       }
     },
     "LagId":{"type":"string"},
@@ -1389,7 +1371,6 @@
       }
     },
     "LongAsn":{"type":"long"},
-    "MTU":{"type":"integer"},
     "MaxResultSetSize":{
       "type":"integer",
       "box":true
@@ -1415,7 +1396,6 @@
         "virtualInterfaceName":{"shape":"VirtualInterfaceName"},
         "vlan":{"shape":"VLAN"},
         "asn":{"shape":"ASN"},
-        "mtu":{"shape":"MTU"},
         "authKey":{"shape":"BGPAuthKey"},
         "amazonAddress":{"shape":"AmazonAddress"},
         "customerAddress":{"shape":"CustomerAddress"},
@@ -1435,7 +1415,6 @@
         "virtualInterfaceName":{"shape":"VirtualInterfaceName"},
         "vlan":{"shape":"VLAN"},
         "asn":{"shape":"ASN"},
-        "mtu":{"shape":"MTU"},
         "authKey":{"shape":"BGPAuthKey"},
         "amazonAddress":{"shape":"AmazonAddress"},
         "addressFamily":{"shape":"AddressFamily"},
@@ -1587,14 +1566,6 @@
         "minimumLinks":{"shape":"Count"}
       }
     },
-    "UpdateVirtualInterfaceAttributesRequest":{
-      "type":"structure",
-      "required":["virtualInterfaceId"],
-      "members":{
-        "virtualInterfaceId":{"shape":"VirtualInterfaceId"},
-        "mtu":{"shape":"MTU"}
-      }
-    },
     "VLAN":{"type":"integer"},
     "VirtualGateway":{
       "type":"structure",
@@ -1634,8 +1605,6 @@
         "addressFamily":{"shape":"AddressFamily"},
         "virtualInterfaceState":{"shape":"VirtualInterfaceState"},
         "customerRouterConfig":{"shape":"RouterConfig"},
-        "mtu":{"shape":"MTU"},
-        "jumboFrameCapable":{"shape":"JumboFrameCapable"},
         "virtualGatewayId":{"shape":"VirtualGatewayId"},
         "directConnectGatewayId":{"shape":"DirectConnectGatewayId"},
         "routeFilterPrefixes":{"shape":"RouteFilterPrefixList"},

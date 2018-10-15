@@ -24,21 +24,6 @@
         {"shape":"InternalException"}
       ]
     },
-    "CancelElasticsearchServiceSoftwareUpdate":{
-      "name":"CancelElasticsearchServiceSoftwareUpdate",
-      "http":{
-        "method":"POST",
-        "requestUri":"/2015-01-01/es/serviceSoftwareUpdate/cancel"
-      },
-      "input":{"shape":"CancelElasticsearchServiceSoftwareUpdateRequest"},
-      "output":{"shape":"CancelElasticsearchServiceSoftwareUpdateResponse"},
-      "errors":[
-        {"shape":"BaseException"},
-        {"shape":"InternalException"},
-        {"shape":"ResourceNotFoundException"},
-        {"shape":"ValidationException"}
-      ]
-    },
     "CreateElasticsearchDomain":{
       "name":"CreateElasticsearchDomain",
       "http":{
@@ -310,21 +295,6 @@
         {"shape":"InternalException"}
       ]
     },
-    "StartElasticsearchServiceSoftwareUpdate":{
-      "name":"StartElasticsearchServiceSoftwareUpdate",
-      "http":{
-        "method":"POST",
-        "requestUri":"/2015-01-01/es/serviceSoftwareUpdate/start"
-      },
-      "input":{"shape":"StartElasticsearchServiceSoftwareUpdateRequest"},
-      "output":{"shape":"StartElasticsearchServiceSoftwareUpdateResponse"},
-      "errors":[
-        {"shape":"BaseException"},
-        {"shape":"InternalException"},
-        {"shape":"ResourceNotFoundException"},
-        {"shape":"ValidationException"}
-      ]
-    },
     "UpdateElasticsearchDomainConfig":{
       "name":"UpdateElasticsearchDomainConfig",
       "http":{
@@ -419,19 +389,6 @@
       "exception":true
     },
     "Boolean":{"type":"boolean"},
-    "CancelElasticsearchServiceSoftwareUpdateRequest":{
-      "type":"structure",
-      "required":["DomainName"],
-      "members":{
-        "DomainName":{"shape":"DomainName"}
-      }
-    },
-    "CancelElasticsearchServiceSoftwareUpdateResponse":{
-      "type":"structure",
-      "members":{
-        "ServiceSoftwareOptions":{"shape":"ServiceSoftwareOptions"}
-      }
-    },
     "CloudWatchLogsLogGroupArn":{"type":"string"},
     "CognitoOptions":{
       "type":"structure",
@@ -504,17 +461,6 @@
       "members":{
         "DomainStatus":{"shape":"ElasticsearchDomainStatus"}
       }
-    },
-    "DeploymentCloseDateTimeStamp":{"type":"timestamp"},
-    "DeploymentStatus":{
-      "type":"string",
-      "enum":[
-        "PENDING_UPDATE",
-        "IN_PROGRESS",
-        "COMPLETED",
-        "NOT_ELIGIBLE",
-        "ELIGIBLE"
-      ]
     },
     "DescribeElasticsearchDomainConfigRequest":{
       "type":"structure",
@@ -814,8 +760,7 @@
         "EncryptionAtRestOptions":{"shape":"EncryptionAtRestOptions"},
         "NodeToNodeEncryptionOptions":{"shape":"NodeToNodeEncryptionOptions"},
         "AdvancedOptions":{"shape":"AdvancedOptions"},
-        "LogPublishingOptions":{"shape":"LogPublishingOptions"},
-        "ServiceSoftwareOptions":{"shape":"ServiceSoftwareOptions"}
+        "LogPublishingOptions":{"shape":"LogPublishingOptions"}
       }
     },
     "ElasticsearchDomainStatusList":{
@@ -1274,18 +1219,6 @@
       "max":2048,
       "min":20
     },
-    "ServiceSoftwareOptions":{
-      "type":"structure",
-      "members":{
-        "CurrentVersion":{"shape":"String"},
-        "NewVersion":{"shape":"String"},
-        "UpdateAvailable":{"shape":"Boolean"},
-        "Cancellable":{"shape":"Boolean"},
-        "UpdateStatus":{"shape":"DeploymentStatus"},
-        "Description":{"shape":"String"},
-        "AutomatedUpdateDate":{"shape":"DeploymentCloseDateTimeStamp"}
-      }
-    },
     "ServiceUrl":{"type":"string"},
     "SnapshotOptions":{
       "type":"structure",
@@ -1302,19 +1235,6 @@
       "members":{
         "Options":{"shape":"SnapshotOptions"},
         "Status":{"shape":"OptionStatus"}
-      }
-    },
-    "StartElasticsearchServiceSoftwareUpdateRequest":{
-      "type":"structure",
-      "required":["DomainName"],
-      "members":{
-        "DomainName":{"shape":"DomainName"}
-      }
-    },
-    "StartElasticsearchServiceSoftwareUpdateResponse":{
-      "type":"structure",
-      "members":{
-        "ServiceSoftwareOptions":{"shape":"ServiceSoftwareOptions"}
       }
     },
     "StartTimestamp":{"type":"timestamp"},

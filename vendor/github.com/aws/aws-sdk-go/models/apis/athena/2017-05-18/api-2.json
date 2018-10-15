@@ -6,7 +6,6 @@
     "jsonVersion":"1.1",
     "protocol":"json",
     "serviceFullName":"Amazon Athena",
-    "serviceId":"Athena",
     "signatureVersion":"v4",
     "targetPrefix":"AmazonAthena",
     "uid":"athena-2017-05-18"
@@ -338,7 +337,6 @@
     "GetQueryResultsOutput":{
       "type":"structure",
       "members":{
-        "UpdateCount":{"shape":"Long"},
         "ResultSet":{"shape":"ResultSet"},
         "NextToken":{"shape":"Token"}
       }
@@ -448,7 +446,6 @@
       "members":{
         "QueryExecutionId":{"shape":"QueryExecutionId"},
         "Query":{"shape":"QueryString"},
-        "StatementType":{"shape":"StatementType"},
         "ResultConfiguration":{"shape":"ResultConfiguration"},
         "QueryExecutionContext":{"shape":"QueryExecutionContext"},
         "Status":{"shape":"QueryExecutionStatus"},
@@ -555,14 +552,6 @@
       "members":{
         "QueryExecutionId":{"shape":"QueryExecutionId"}
       }
-    },
-    "StatementType":{
-      "type":"string",
-      "enum":[
-        "DDL",
-        "DML",
-        "UTILITY"
-      ]
     },
     "StopQueryExecutionInput":{
       "type":"structure",

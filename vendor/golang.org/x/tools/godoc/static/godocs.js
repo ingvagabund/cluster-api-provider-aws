@@ -149,6 +149,7 @@ function setupDropdownPlayground() {
     button.removeClass('active');
     div.hide();
   });
+  button.show();
   $('#menu').css('min-width', '+=60');
 }
 
