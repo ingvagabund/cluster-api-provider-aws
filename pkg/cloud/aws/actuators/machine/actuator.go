@@ -32,13 +32,14 @@ import (
 	providerconfigv1 "sigs.k8s.io/cluster-api-provider-aws/pkg/apis/awsproviderconfig/v1alpha1"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	clusterclient "sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset"
-	//clustererror "sigs.k8s.io/cluster-api/pkg/controller/error"
+
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
 	awsclient "sigs.k8s.io/cluster-api-provider-aws/pkg/cloud/aws/client"
 	clustoplog "sigs.k8s.io/cluster-api-provider-aws/pkg/cloud/aws/logging"
+	//"k8s.io/apimachinery/pkg/runtime"
 )
 
 const (
@@ -59,6 +60,7 @@ type Actuator struct {
 	clusterClient    clusterclient.Interface
 	logger           *log.Entry
 	awsClientBuilder awsclient.AwsClientBuilderFuncType
+	codec 			 codec
 }
 
 // ActuatorParams holds parameter information for Actuator
@@ -67,6 +69,7 @@ type ActuatorParams struct {
 	ClusterClient    clusterclient.Interface
 	Logger           *log.Entry
 	AwsClientBuilder awsclient.AwsClientBuilderFuncType
+	Codec 			 codec
 }
 
 // NewActuator returns a new AWS Actuator
@@ -76,6 +79,7 @@ func NewActuator(params ActuatorParams) (*Actuator, error) {
 		clusterClient:    params.ClusterClient,
 		logger:           params.Logger,
 		awsClientBuilder: params.AwsClientBuilder,
+		codec: 			  params.Codec,
 	}
 	return actuator, nil
 }
@@ -102,53 +106,22 @@ func (a *Actuator) Create(cluster *clusterv1.Cluster, machine *clusterv1.Machine
 	return a.updateStatus(machine, instance, mLog)
 }
 
-func (a *Actuator) updateMachineStatus(machine *clusterv1.Machine, awsStatus *providerconfigv1.AWSMachineProviderStatus, mLog log.FieldLogger, networkAddresses []corev1.NodeAddress) error {
-	//awsStatusRaw, err := EncodeAWSMachineProviderStatus(awsStatus)
-	//if err != nil {
-	//	mLog.Errorf("error encoding AWS provider status: %v", err)
-	//	return err
-	//}
-	//
-	//machineCopy := machine.DeepCopy()
-	//machineCopy.Status.ProviderStatus = awsStatusRaw
-	//if networkAddresses != nil {
-	//	machineCopy.Status.Addresses = networkAddresses
-	//}
-	//
-	//if !equality.Semantic.DeepEqual(machine.Status, machineCopy.Status) {
-	//	mLog.Info("machine status has changed, updating")
-	//	time := metav1.Now()
-	//	machineCopy.Status.LastUpdated = &time
-	//
-	//	_, err := a.clusterClient.ClusterV1alpha1().Machines(machineCopy.Namespace).UpdateStatus(machineCopy)
-	//	if err != nil {
-	//		mLog.Errorf("error updating machine status: %v", err)
-	//		return err
-	//	}
-	//} else {
-	//	mLog.Debug("status unchanged")
-	//}
-
-	return nil
-}
-
 // updateMachineProviderConditions updates conditions set within machine provider status.
 func (a *Actuator) updateMachineProviderConditions(machine *clusterv1.Machine, mLog log.FieldLogger, conditionType providerconfigv1.AWSMachineProviderConditionType, reason string, msg string) error {
-
 	mLog.Debug("updating machine conditions")
 
-	//awsStatus, err := AWSMachineProviderStatusFromClusterAPIMachine(machine)
-	//if err != nil {
-	//	mLog.Errorf("error decoding machine provider status: %v", err)
-	//	return err
-	//}
-	//
-	//awsStatus.Conditions = SetAWSMachineProviderCondition(awsStatus.Conditions, conditionType, corev1.ConditionTrue, reason, msg, UpdateConditionIfReasonOrMessageChange)
-	//
-	//err = a.updateMachineStatus(machine, awsStatus, mLog, nil)
-	//if err != nil {
-	//	return err
-	//}
+	awsStatus, err := ProviderStatusFromMachine(a.codec, machine)
+	if err != nil {
+		mLog.Errorf("error decoding machine provider status: %v", err)
+		return err
+	}
+
+	awsStatus.Conditions = SetAWSMachineProviderCondition(awsStatus.Conditions, conditionType, corev1.ConditionTrue, reason, msg, UpdateConditionIfReasonOrMessageChange)
+
+	err = a.updateMachineStatus(machine, awsStatus, mLog, nil)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -581,77 +554,6 @@ func (a *Actuator) getMachineInstances(cluster *clusterv1.Cluster, machine *clus
 	return GetRunningInstances(machine, client)
 }
 
-// updateStatus calculates the new machine status, checks if anything has changed, and updates if so.
-func (a *Actuator) updateStatus(machine *clusterv1.Machine, instance *ec2.Instance, mLog log.FieldLogger) error {
-
-	mLog.Debug("updating status")
-
-	//// Starting with a fresh status as we assume full control of it here.
-	//awsStatus, err := AWSMachineProviderStatusFromClusterAPIMachine(machine)
-	//if err != nil {
-	//	mLog.Errorf("error decoding machine provider status: %v", err)
-	//	return err
-	//}
-	//// Save this, we need to check if it changed later.
-	//networkAddresses := []corev1.NodeAddress{}
-	//
-	//// Instance may have existed but been deleted outside our control, clear it's status if so:
-	//if instance == nil {
-	//	awsStatus.InstanceID = nil
-	//	awsStatus.InstanceState = nil
-	//} else {
-	//	awsStatus.InstanceID = instance.InstanceId
-	//	awsStatus.InstanceState = instance.State.Name
-	//	if instance.PublicIpAddress != nil {
-	//		networkAddresses = append(networkAddresses, corev1.NodeAddress{
-	//			Type:    corev1.NodeExternalIP,
-	//			Address: *instance.PublicIpAddress,
-	//		})
-	//	}
-	//	if instance.PrivateIpAddress != nil {
-	//		networkAddresses = append(networkAddresses, corev1.NodeAddress{
-	//			Type:    corev1.NodeInternalIP,
-	//			Address: *instance.PrivateIpAddress,
-	//		})
-	//	}
-	//	if instance.PublicDnsName != nil {
-	//		networkAddresses = append(networkAddresses, corev1.NodeAddress{
-	//			Type:    corev1.NodeExternalDNS,
-	//			Address: *instance.PublicDnsName,
-	//		})
-	//	}
-	//	if instance.PrivateDnsName != nil {
-	//		networkAddresses = append(networkAddresses, corev1.NodeAddress{
-	//			Type:    corev1.NodeInternalDNS,
-	//			Address: *instance.PrivateDnsName,
-	//		})
-	//	}
-	//}
-	//mLog.Debug("finished calculating AWS status")
-	//
-	//awsStatus.Conditions = SetAWSMachineProviderCondition(awsStatus.Conditions, providerconfigv1.MachineCreation, corev1.ConditionTrue, MachineCreationSucceeded, "machine successfully created", UpdateConditionIfReasonOrMessageChange)
-	//
-	//// TODO(jchaloup): do we really need to update tis?
-	//// origInstanceID := awsStatus.InstanceID
-	//// if !StringPtrsEqual(origInstanceID, awsStatus.InstanceID) {
-	//// 	mLog.Debug("AWS instance ID changed, clearing LastELBSync to trigger adding to ELBs")
-	//// 	awsStatus.LastELBSync = nil
-	//// }
-	//
-	//err = a.updateMachineStatus(machine, awsStatus, mLog, networkAddresses)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//// If machine state is still pending, we will return an error to keep the controllers
-	//// attempting to update status until it hits a more permanent state. This will ensure
-	//// we get a public IP populated more quickly.
-	//if awsStatus.InstanceState != nil && *awsStatus.InstanceState == ec2.InstanceStateNamePending {
-	//	mLog.Infof("instance state still pending, returning an error to requeue")
-	//	return &clustererror.RequeueAfterError{RequeueAfter: requeueAfterSeconds * time.Second}
-	//}
-	return nil
-}
 
 func getClusterID(machine *clusterv1.Machine) (string, bool) {
 	clusterID, ok := machine.Labels[providerconfigv1.ClusterNameLabel]

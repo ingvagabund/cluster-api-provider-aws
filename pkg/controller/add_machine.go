@@ -22,6 +22,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	machineactuator "sigs.k8s.io/cluster-api-provider-aws/pkg/cloud/aws/actuators/machine"
+	"sigs.k8s.io/cluster-api-provider-aws/pkg/apis/awsproviderconfig/v1alpha1"
 	"github.com/golang/glog"
 	log "github.com/sirupsen/logrus"
 	awsclient "sigs.k8s.io/cluster-api-provider-aws/pkg/cloud/aws/client"
@@ -64,11 +65,17 @@ func init() {
 
 		logger := log.WithField("controller", "awsMachine")
 
+		codec, err := v1alpha1.NewCodec()
+		if err != nil {
+			glog.Fatal(err)
+		}
+
 		params := machineactuator.ActuatorParams{
 			ClusterClient:    client,
 			KubeClient:       kubeClient,
 			AwsClientBuilder: awsclient.NewClient,
 			Logger:           logger,
+			Codec: 			  codec,
 		}
 
 		actuator, err := machineactuator.NewActuator(params)

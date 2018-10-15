@@ -20,8 +20,6 @@ import (
 	//"bytes"
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime"
-
 	log "github.com/sirupsen/logrus"
 
 	corev1 "k8s.io/api/core/v1"
@@ -34,7 +32,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/ghodss/yaml"
 )
 
 // SortInstances will examine the given slice of instances and return the current active instance for
@@ -185,57 +182,6 @@ func TerminateInstances(client awsclient.Client, instances []*ec2.Instance, mLog
 	}
 	return nil
 }
-
-func machineProviderFromProviderConfig(providerConfig clusterv1.ProviderConfig) (*providerconfigv1.AWSMachineProviderConfig, error) {
-	var config providerconfigv1.AWSMachineProviderConfig
-	if err := yaml.Unmarshal(providerConfig.Value.Raw, &config); err != nil {
-		return nil, err
-	}
-	return &config, nil
-}
-
-func ProviderConfigFromMachine(in *providerconfigv1.AWSMachineProviderConfig) (*clusterv1.ProviderConfig, error) {
-	mpc, err := yaml.Marshal(in)
-	if err != nil {
-		return nil, err
-	}
-	return &clusterv1.ProviderConfig{
-		Value: &runtime.RawExtension{Raw: mpc},
-	}, nil
-}
-
-
-// AWSMachineProviderStatusFromClusterAPIMachine gets the machine provider status from the specified machine.
-func AWSMachineProviderStatusFromClusterAPIMachine(m *clusterv1.Machine) (*providerconfigv1.AWSMachineProviderStatus, error) {
-	return AWSMachineProviderStatusFromMachineStatus(&m.Status)
-}
-
-// AWSMachineProviderStatusFromMachineStatus gets the machine provider status from the specified machine status.
-func AWSMachineProviderStatusFromMachineStatus(s *clusterv1.MachineStatus) (*providerconfigv1.AWSMachineProviderStatus, error) {
-	var status providerconfigv1.AWSMachineProviderStatus
-	err := yaml.Unmarshal(s.ProviderStatus.Raw, &status)
-	if err != nil {
-		return nil, err
-	}
-	return &status, nil
-}
-
-// EncodeAWSMachineProviderStatus encodes the machine status into RawExtension
-//func EncodeAWSMachineProviderStatus(awsStatus *providerconfigv1.AWSMachineProviderStatus) (*runtime.RawExtension, error) {
-//	awsStatus.TypeMeta = metav1.TypeMeta{
-//		APIVersion: providerconfigv1.SchemeGroupVersion.String(),
-//		Kind:       "AWSMachineProviderStatus",
-//	}
-//	serializer := jsonserializer.NewSerializer(jsonserializer.DefaultMetaFactory, providerconfigv1.Scheme, providerconfigv1.Scheme, false)
-//	var buffer bytes.Buffer
-//	err := serializer.Encode(awsStatus, &buffer)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return &runtime.RawExtension{
-//		Raw: bytes.TrimSpace(buffer.Bytes()),
-//	}, nil
-//}
 
 // IsMaster returns true if the machine is part of a cluster's control plane
 func IsMaster(machine *clusterv1.Machine) bool {
