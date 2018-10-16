@@ -54,6 +54,8 @@ const (
 	MachineCreationFailed = "MachineCreationFailed"
 )
 
+var MachineActuator *Actuator
+
 // Actuator is the AWS-specific actuator for the Cluster API machine controller
 type Actuator struct {
 	kubeClient       kubernetes.Interface
@@ -88,6 +90,17 @@ func NewActuator(params ActuatorParams) (*Actuator, error) {
 func (a *Actuator) Create(cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
 	mLog := clustoplog.WithMachine(a.logger, machine)
 	mLog.Info("creating machine")
+
+	alreadyExists, err := a.Exists(cluster, machine)
+	if err != nil {
+		mLog.Errorf("error getting running instances: %v", err)
+		return err
+	}
+	if alreadyExists {
+		mLog.Debug("skipped creating a machine that already exists")
+		return nil
+	}
+
 	instance, err := a.CreateMachine(cluster, machine)
 	if err != nil {
 		mLog.Errorf("error creating machine: %v", err)
@@ -218,7 +231,7 @@ func getSubnetIDs(subnet providerconfigv1.AWSResourceReference, client awsclient
 func (a *Actuator) CreateMachine(cluster *clusterv1.Cluster, machine *clusterv1.Machine) (*ec2.Instance, error) {
 	mLog := clustoplog.WithMachine(a.logger, machine)
 
-	machineProviderConfig, err := machineProviderFromProviderConfig(machine.Spec.ProviderConfig)
+	machineProviderConfig, err := ProviderConfigFromMachine(a.codec, machine)
 	if err != nil {
 		mLog.Errorf("error decoding MachineProviderConfig: %v", err)
 		return nil, err
@@ -399,7 +412,7 @@ func (a *Actuator) Delete(cluster *clusterv1.Cluster, machine *clusterv1.Machine
 func (a *Actuator) DeleteMachine(cluster *clusterv1.Cluster, machine *clusterv1.Machine) error {
 	mLog := clustoplog.WithMachine(a.logger, machine)
 
-	machineProviderConfig, err := machineProviderFromProviderConfig(machine.Spec.ProviderConfig)
+	machineProviderConfig, err := ProviderConfigFromMachine(a.codec, machine)
 	if err != nil {
 		mLog.Errorf("error decoding MachineProviderConfig: %v", err)
 		return err
@@ -436,7 +449,7 @@ func (a *Actuator) Update(cluster *clusterv1.Cluster, machine *clusterv1.Machine
 	mLog := clustoplog.WithMachine(a.logger, machine)
 	mLog.Debugf("updating machine")
 
-	machineProviderConfig, err := machineProviderFromProviderConfig(machine.Spec.ProviderConfig)
+	machineProviderConfig, err := ProviderConfigFromMachine(a.codec, machine)
 	if err != nil {
 		mLog.Errorf("error decoding MachineProviderConfig: %v", err)
 		return err
@@ -534,7 +547,7 @@ func (a *Actuator) Describe(cluster *clusterv1.Cluster, machine *clusterv1.Machi
 func (a *Actuator) getMachineInstances(cluster *clusterv1.Cluster, machine *clusterv1.Machine) ([]*ec2.Instance, error) {
 	mLog := clustoplog.WithMachine(a.logger, machine)
 
-	machineProviderConfig, err := machineProviderFromProviderConfig(machine.Spec.ProviderConfig)
+	machineProviderConfig, err := ProviderConfigFromMachine(a.codec, machine)
 	if err != nil {
 		mLog.Errorf("error decoding MachineProviderConfig: %v", err)
 		return nil, err

@@ -43,8 +43,7 @@ type AWSMachineProviderConfigList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&AWSMachineProviderConfig{}, &AWSMachineProviderConfigList{})
-	SchemeBuilder.Register(&AWSMachineProviderStatus{})
+	SchemeBuilder.Register(&AWSMachineProviderConfigList{}, &AWSMachineProviderConfig{}, &AWSMachineProviderStatus{})
 }
 
 // +genclient

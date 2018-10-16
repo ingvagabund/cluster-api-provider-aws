@@ -19,7 +19,7 @@ limitations under the License.
 // Package v1alpha1 contains API Schema definitions for the awsproviderconfig v1alpha1 API group
 // +k8s:openapi-gen=true
 // +k8s:deepcopy-gen=package,register
-// +k8s:conversion-gen=sigs.k8s.io/cluster-api-provider-aws/migration/pkg/apis/awsproviderconfig
+// +k8s:conversion-gen=sigs.k8s.io/cluster-api-provider-aws/pkg/apis/awsproviderconfig
 // +k8s:defaulter-gen=TypeMeta
 // +groupName=awsproviderconfig.k8s.io
 package v1alpha1
@@ -42,10 +42,9 @@ var (
 	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
 )
 //
-//func init() {
-//	SchemeBuilder.Register(&AWSMachineProviderConfig{})
-//	SchemeBuilder.Register(&AWSMachineProviderStatus{})
-//}
+func init() {
+	SchemeBuilder.Register(&AWSMachineProviderConfigList{}, &AWSMachineProviderConfig{}, &AWSMachineProviderStatus{})
+}
 
 // AWSProviderConfigCodec is a runtime codec for the provider configuration
 // +k8s:deepcopy-gen=false

@@ -41,7 +41,6 @@ func (a *Actuator) updateStatus(machine *clusterv1.Machine, instance *ec2.Instan
 	if instance == nil {
 		awsStatus.InstanceID = nil
 		awsStatus.InstanceState = nil
-		mLog.Debugf("WOOT Instance is nil %v", awsStatus)
 	} else {
 		awsStatus.InstanceID = instance.InstanceId
 		awsStatus.InstanceState = instance.State.Name
@@ -69,14 +68,8 @@ func (a *Actuator) updateStatus(machine *clusterv1.Machine, instance *ec2.Instan
 				Address: *instance.PrivateDnsName,
 			})
 		}
-		mLog.Debugf("WOOT is not nil %+v", awsStatus)
-		mLog.Debugf("WOOT is not nil InstanceID %v", awsStatus.InstanceID)
-		mLog.Debugf("WOOT is not nil InstanceState %v", awsStatus.InstanceState)
-		mLog.Debugf("WOOT is not nil instance %v", instance)
 	}
 	mLog.Debug("finished calculating AWS status")
-
-	mLog.Debugf("WOOT %v", awsStatus.Conditions)
 	awsStatus.Conditions = SetAWSMachineProviderCondition(awsStatus.Conditions, providerconfigv1.MachineCreation, corev1.ConditionTrue, MachineCreationSucceeded, "machine successfully created", UpdateConditionIfReasonOrMessageChange)
 
 	// TODO(jchaloup): do we really need to update tis?
@@ -85,14 +78,11 @@ func (a *Actuator) updateStatus(machine *clusterv1.Machine, instance *ec2.Instan
 	// 	mLog.Debug("AWS instance ID changed, clearing LastELBSync to trigger adding to ELBs")
 	// 	awsStatus.LastELBSync = nil
 	// }
-	mLog.Debugf("AFTER CONDITIONS %v", awsStatus)
-	mLog.Debugf("AFTER CONDITIONS %v", awsStatus.Conditions)
 	err = a.updateMachineStatus(machine, awsStatus, mLog, networkAddresses)
 	if err != nil {
 		return err
 	}
 
-	mLog.Debugf("AFTER Update machine Status")
 	// If machine state is still pending, we will return an error to keep the controllers
 	// attempting to update status until it hits a more permanent state. This will ensure
 	// we get a public IP populated more quickly.
@@ -100,7 +90,6 @@ func (a *Actuator) updateStatus(machine *clusterv1.Machine, instance *ec2.Instan
 		mLog.Infof("instance state still pending, returning an error to requeue")
 		return &clustererror.RequeueAfterError{RequeueAfter: requeueAfterSeconds * time.Second}
 	}
-	mLog.Debugf("END Update status")
 	return nil
 }
 
@@ -110,7 +99,6 @@ func (a *Actuator) updateMachineStatus(machine *clusterv1.Machine, awsStatus *pr
 		mLog.Errorf("error encoding AWS provider status: %v", err)
 		return err
 	}
-	mLog.Info("AFTER ENCODING INTO RAW")
 
 	machineCopy := machine.DeepCopy()
 	if machineCopy.Status.ProviderStatus == nil {
@@ -121,13 +109,12 @@ func (a *Actuator) updateMachineStatus(machine *clusterv1.Machine, awsStatus *pr
 		machineCopy.Status.Addresses = networkAddresses
 	}
 
-	mLog.Info("AFTER COPYING")
 	if !equality.Semantic.DeepEqual(machine.Status, machineCopy.Status) {
 		mLog.Info("machine status has changed, updating")
 		time := metav1.Now()
 		machineCopy.Status.LastUpdated = &time
 
-		_, err := a.clusterClient.ClusterV1alpha1().Machines(machineCopy.Namespace).UpdateStatus(machineCopy)
+		_, err := a.clusterClient.ClusterV1alpha1().Machines(machineCopy.Namespace).Update(machineCopy)
 		if err != nil {
 			mLog.Errorf("error updating machine status: %v", err)
 			return err
@@ -144,9 +131,12 @@ func EncodeProviderStatus(codec codec, awsStatus *providerconfigv1.AWSMachinePro
 	return codec.EncodeProviderStatus(awsStatus)
 }
 
-func machineProviderFromProviderConfig(providerConfig clusterv1.ProviderConfig) (*providerconfigv1.AWSMachineProviderConfig, error) {
+func ProviderConfigFromMachine(codec codec, machine *clusterv1.Machine) (*providerconfigv1.AWSMachineProviderConfig, error) {
+	//machineProviderCfg := &providerconfigv1.AWSMachineProviderConfig{}
+	//err := codec.DecodeFromProviderConfig(machine.Spec.ProviderConfig, machineProviderCfg)
+	//return machineProviderCfg, err
 	var config providerconfigv1.AWSMachineProviderConfig
-	if err := yaml.Unmarshal(providerConfig.Value.Raw, &config); err != nil {
+	if err := yaml.Unmarshal(machine.Spec.ProviderConfig.Value.Raw, &config); err != nil {
 		return nil, err
 	}
 	return &config, nil
