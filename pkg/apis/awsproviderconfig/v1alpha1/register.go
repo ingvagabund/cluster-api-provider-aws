@@ -25,13 +25,14 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"bytes"
+	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/scheme"
-	"fmt"
-	"bytes"
 )
 
 var (
@@ -41,7 +42,16 @@ var (
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
 )
-//
+
+var (
+	// Scheme with new scheme
+	Scheme, _ = NewScheme()
+	// Codecs for creating a server config
+	Codecs = serializer.NewCodecFactory(Scheme)
+	// Encoder for encoding cluster objects
+	Encoder, _ = newEncoder(&Codecs)
+)
+
 func init() {
 	SchemeBuilder.Register(&AWSMachineProviderConfigList{}, &AWSMachineProviderConfig{}, &AWSMachineProviderStatus{})
 }

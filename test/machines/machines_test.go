@@ -8,9 +8,9 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	"github.com/golang/glog"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/prometheus/common/log"
 	"k8s.io/apimachinery/pkg/util/uuid"
 
 	"github.com/openshift/cluster-api-actuator-pkg/pkg/e2e/framework"
@@ -68,13 +68,13 @@ var _ = framework.SigKubeDescribe("Machines", func() {
 		testNamespace = &apiv1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "namespace-" + string(uuid.NewUUID()),
+				// Name: "justthat",
 			},
 		}
 
 		By(fmt.Sprintf("Creating %q namespace", testNamespace.Name))
 		_, err = f.KubeClient.CoreV1().Namespaces().Create(testNamespace)
 		Expect(err).NotTo(HaveOccurred())
-
 		f.DeployClusterAPIStack(testNamespace.Name, f.ActuatorImage, "")
 	})
 
@@ -84,7 +84,7 @@ var _ = framework.SigKubeDescribe("Machines", func() {
 
 		if testNamespace != nil {
 			f.DestroyClusterAPIStack(testNamespace.Name, f.ActuatorImage, "")
-			log.Infof(testNamespace.Name+": %#v", testNamespace)
+			glog.V(2).Infof(testNamespace.Name+": %#v", testNamespace)
 			By(fmt.Sprintf("Destroying %q namespace", testNamespace.Name))
 			f.KubeClient.CoreV1().Namespaces().Delete(testNamespace.Name, &metav1.DeleteOptions{})
 			// Ignore namespaces that are not deleted so other specs can be run.
@@ -100,7 +100,6 @@ var _ = framework.SigKubeDescribe("Machines", func() {
 	// are defined through CRD, we can relax the restriction.
 	Context("AWS actuator", func() {
 		It("Can create AWS instances", func() {
-
 			awsCredSecret := utils.GenerateAwsCredentialsSecretFromEnv(awsCredentialsSecretName, testNamespace.Name)
 			createSecretAndWait(f, awsCredSecret)
 
@@ -287,10 +286,10 @@ var _ = framework.SigKubeDescribe("Machines", func() {
 					// check role
 					_, isCompute := node.Labels["node-role.kubernetes.io/compute"]
 					if !isCompute {
-						log.Infof("node %q does not have the compute role assigned", node.Name)
+						glog.V(2).Infof("node %q does not have the compute role assigned", node.Name)
 						return false, nil
 					}
-					log.Infof("node %q role set to 'node-role.kubernetes.io/compute'", node.Name)
+					glog.V(2).Infof("node %q role set to 'node-role.kubernetes.io/compute'", node.Name)
 					// check node linking
 
 					// If there is the same number of machines are compute nodes,
@@ -298,10 +297,10 @@ var _ = framework.SigKubeDescribe("Machines", func() {
 					// So it's enough to check each node has its machine linked.
 					matchingMachine, found := matches[node.Name]
 					if !found {
-						log.Infof("node %q is not linked with a machine", node.Name)
+						glog.V(2).Infof("node %q is not linked with a machine", node.Name)
 						return false, nil
 					}
-					log.Infof("node %q is linked with %q machine", node.Name, matchingMachine)
+					glog.V(2).Infof("node %q is linked with %q machine", node.Name, matchingMachine)
 				}
 
 				return true, nil

@@ -8,9 +8,11 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	awsclient "sigs.k8s.io/cluster-api-provider-aws/pkg/cloud/aws/client"
 	providerconfigv1 "sigs.k8s.io/cluster-api-provider-aws/pkg/apis/awsproviderconfig/v1alpha1"
+	awsclient "sigs.k8s.io/cluster-api-provider-aws/pkg/cloud/aws/client"
 	clusterv1alpha1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
+
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
 
 // GenerateAwsCredentialsSecretFromEnv generates secret with AWS credentials
@@ -89,8 +91,18 @@ func TestingMachineProviderConfig(awsCredentialsSecretName string, clusterID str
 		PublicIP: &publicIP,
 	}
 
+	scheme := runtime.NewScheme()
+	providerconfigv1.SchemeBuilder.AddToScheme(scheme)
+	codecFactory := serializer.NewCodecFactory(scheme)
+
+	serializerInfos := codecFactory.SupportedMediaTypes()
+	if len(serializerInfos) == 0 {
+		return clusterv1alpha1.ProviderConfig{}, fmt.Errorf("unable to find any serlializers")
+	}
+	encoder := codecFactory.EncoderForVersion(serializerInfos[0].Serializer, providerconfigv1.SchemeGroupVersion)
+
 	var buf bytes.Buffer
-	if err := providerconfigv1.Encoder.Encode(machinePc, &buf); err != nil {
+	if err := encoder.Encode(machinePc, &buf); err != nil {
 		return clusterv1alpha1.ProviderConfig{}, fmt.Errorf("AWSMachineProviderConfig encoding failed: %v", err)
 	}
 
@@ -150,8 +162,18 @@ func MasterMachineProviderConfig(awsCredentialsSecretName, masterUserDataSecretN
 		},
 	}
 
+	scheme := runtime.NewScheme()
+	providerconfigv1.SchemeBuilder.AddToScheme(scheme)
+	codecFactory := serializer.NewCodecFactory(scheme)
+
+	serializerInfos := codecFactory.SupportedMediaTypes()
+	if len(serializerInfos) == 0 {
+		return clusterv1alpha1.ProviderConfig{}, fmt.Errorf("unable to find any serlializers")
+	}
+	encoder := codecFactory.EncoderForVersion(serializerInfos[0].Serializer, providerconfigv1.SchemeGroupVersion)
+
 	var buf bytes.Buffer
-	if err := providerconfigv1.Encoder.Encode(machinePc, &buf); err != nil {
+	if err := encoder.Encode(machinePc, &buf); err != nil {
 		return clusterv1alpha1.ProviderConfig{}, fmt.Errorf("AWSMachineProviderConfig encoding failed: %v", err)
 	}
 
@@ -211,8 +233,18 @@ func WorkerMachineSetProviderConfig(awsCredentialsSecretName, workerUserDataSecr
 		},
 	}
 
+	scheme := runtime.NewScheme()
+	providerconfigv1.SchemeBuilder.AddToScheme(scheme)
+	codecFactory := serializer.NewCodecFactory(scheme)
+
+	serializerInfos := codecFactory.SupportedMediaTypes()
+	if len(serializerInfos) == 0 {
+		return clusterv1alpha1.ProviderConfig{}, fmt.Errorf("unable to find any serlializers")
+	}
+	encoder := codecFactory.EncoderForVersion(serializerInfos[0].Serializer, providerconfigv1.SchemeGroupVersion)
+
 	var buf bytes.Buffer
-	if err := providerconfigv1.Encoder.Encode(machinePc, &buf); err != nil {
+	if err := encoder.Encode(machinePc, &buf); err != nil {
 		return clusterv1alpha1.ProviderConfig{}, fmt.Errorf("AWSMachineProviderConfig encoding failed: %v", err)
 	}
 

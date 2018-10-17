@@ -12,8 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+VERSION     ?= $(shell git describe --always --abbrev=7)
+MUTABLE_TAG ?= latest
+IMAGE        = origin-aws-machine-controllers
+
 .PHONY: all
 all: generate build images
+
+NO_DOCKER ?= 0
+ ifeq ($(NO_DOCKER), 1)
+   DOCKER_CMD =
+   IMAGE_BUILD_CMD = imagebuilder
+   CGO_ENABLED = 1
+ else
+   DOCKER_CMD := docker run --rm -e CGO_ENABLED=1 -v "$(PWD)":/go/src/sigs.k8s.io/cluster-api-provider-aws:Z -w /go/src/sigs.k8s.io/cluster-api-provider-aws openshift/origin-release:golang-1.10
+   IMAGE_BUILD_CMD = docker build
+ endif
+
 
 .PHONY: depend
 depend:
@@ -47,8 +62,7 @@ generate-mocks:
 	go generate ./cloud/aws/client/
 
 build:
-	CGO_ENABLED=0 go install -ldflags '-extldflags "-static"' sigs.k8s.io/cluster-api-provider-aws/cmd/cluster-controller
-	CGO_ENABLED=0 go install -ldflags '-extldflags "-static"' sigs.k8s.io/cluster-api-provider-aws/cmd/machine-controller
+	$(DOCKER_CMD) go build -o bin/manager $(GOGCFLAGS) -ldflags '-extldflags "-static"' sigs.k8s.io/cluster-api-provider-aws/cmd/manager
 
 aws-actuator:
 	go build -o bin/aws-actuator sigs.k8s.io/cluster-api-provider-aws/cmd/aws-actuator
@@ -56,7 +70,8 @@ aws-actuator:
 .PHONY: images
 images: ## Create images
 	#$(MAKE) -C cmd/cluster-controller image
-	$(MAKE) -C cmd/machine-controller image
+	# $(MAKE) -C cmd/machine-controller image
+	$(IMAGE_BUILD_CMD) -t "$(IMAGE):$(VERSION)" -t "$(IMAGE):$(MUTABLE_TAG)" ./
 
 .PHONY: push
 push:
@@ -76,7 +91,8 @@ integration: ## Run integration test
 
 .PHONY: test-e2e
 test-e2e: ## Run e2e test
-	go test -timeout 20m -v sigs.k8s.io/cluster-api-provider-aws/test/machines -kubeconfig $${KUBECONFIG:-~/.kube/config} -ssh-key $${SSH_PK:-~/.ssh/id_rsa} -actuator-image $${ACTUATOR_IMAGE:-gcr.io/k8s-cluster-api/aws-machine-controller:0.0.1} -cluster-id $${ENVIRONMENT_ID:-""} -ginkgo.v
+	go test -c -o bin/machines.test sigs.k8s.io/cluster-api-provider-aws/test/machines
+	./bin/machines.test -logtostderr -v 3 -kubeconfig $${KUBECONFIG:-/root/.kube/config} -ssh-key $${SSH_PK:-~/.ssh/id_rsa} -actuator-image $${ACTUATOR_IMAGE:-origin-aws-machine-controllers:89f6add} -cluster-id $${ENVIRONMENT_ID:-""} -ginkgo.v
 
 .PHONY: lint
 lint: ## Go lint your code

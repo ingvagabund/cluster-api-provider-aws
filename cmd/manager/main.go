@@ -17,22 +17,24 @@ limitations under the License.
 package main
 
 import (
+	"flag"
+	"os"
+
+	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
+	// "github.com/spf13/pflag"
+	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/cluster-api-provider-aws/pkg/apis"
+	"sigs.k8s.io/cluster-api-provider-aws/pkg/apis/awsproviderconfig/v1alpha1"
+	machineactuator "sigs.k8s.io/cluster-api-provider-aws/pkg/cloud/aws/actuators/machine"
+	awsclient "sigs.k8s.io/cluster-api-provider-aws/pkg/cloud/aws/client"
 	"sigs.k8s.io/cluster-api-provider-aws/pkg/controller"
+	clusterapis "sigs.k8s.io/cluster-api/pkg/apis"
+	"sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
-	clusterapis "sigs.k8s.io/cluster-api/pkg/apis"
-	"sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset"
-	"k8s.io/client-go/kubernetes"
-	machineactuator "sigs.k8s.io/cluster-api-provider-aws/pkg/cloud/aws/actuators/machine"
-	"sigs.k8s.io/cluster-api-provider-aws/pkg/apis/awsproviderconfig/v1alpha1"
-	"github.com/golang/glog"
-	log "github.com/sirupsen/logrus"
-	awsclient "sigs.k8s.io/cluster-api-provider-aws/pkg/cloud/aws/client"
-	"os"
-	"github.com/spf13/pflag"
 )
 
 var (
@@ -44,13 +46,15 @@ const (
 )
 
 func init() {
-	pflag.CommandLine.StringVar(&logLevel, "log-level", defaultLogLevel, "Log level (debug,info,warn,error,fatal)")
+	flag.StringVar(&logLevel, "log-level", defaultLogLevel,
+		"Log level (debug,info,warn,error,fatal)")
 }
 
 func main() {
 	// the following line exists to make glog happy, for more information, see: https://github.com/kubernetes/kubernetes/issues/17162
-	//flag.CommandLine.Parse([]string{})
-	pflag.Parse()
+	// flag.CommandLine.Parse([]string{})
+	// pflag.Parse()
+	flag.Parse()
 
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
@@ -94,7 +98,6 @@ func initActuator(m manager.Manager) {
 		glog.Fatalf("Could not create client for talking to the apiserver: %v", err)
 	}
 
-
 	kubeClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		glog.Fatalf("Could not create kubernetes client to talk to the apiserver: %v", err)
@@ -119,7 +122,7 @@ func initActuator(m manager.Manager) {
 		KubeClient:       kubeClient,
 		AwsClientBuilder: awsclient.NewClient,
 		Logger:           logger,
-		Codec: 			  codec,
+		Codec:            codec,
 	}
 
 	machineactuator.MachineActuator, err = machineactuator.NewActuator(params)
