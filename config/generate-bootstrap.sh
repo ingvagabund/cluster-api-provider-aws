@@ -22,7 +22,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: master-user-data-secret
-  namespace: default
+  namespace: aws-provider
 type: Opaque
 data:
   userData: $secrethash

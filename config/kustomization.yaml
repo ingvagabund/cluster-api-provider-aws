@@ -23,4 +23,5 @@ resources:
 - crds/machinedeployment.openshift.io.crd.yaml
 - rbac/rbac_role.yaml
 - rbac/rbac_role_binding.yaml
+- controllers/namespaces.yaml
 - controllers/deployment.yaml

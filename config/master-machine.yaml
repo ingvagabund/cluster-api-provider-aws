@@ -3,7 +3,7 @@ apiVersion: machine.openshift.io/v1beta1
 kind: Machine
 metadata:
   name: master-machine
-  namespace: default
+  namespace: aws-provider
   labels:
     machine.openshift.io/cluster-api-cluster: aws-actuator-k8s
 spec:

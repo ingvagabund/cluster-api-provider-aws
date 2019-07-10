@@ -65,15 +65,18 @@ chown $(id -u):$(id -g) /root/.kube/config
 ######## Deploy machine-api plane
 ################################################
 
-git clone https://github.com/openshift/cluster-api-provider-aws.git
+git clone https://github.com/ingvagabund/cluster-api-provider-aws.git
 cd cluster-api-provider-aws
+git checkout deploy-kubemark-actuator-aside-to-aws-actuator
+
+kustomize build config | sudo kubectl apply -f -
 
 cat <<EOF > secret.yaml
 apiVersion: v1
 kind: Secret
 metadata:
   name: aws-credentials-secret
-  namespace: default
+  namespace: aws-provider
 type: Opaque
 data:
   aws_access_key_id: FILLIN
@@ -81,8 +84,6 @@ data:
 EOF
 
 sudo kubectl apply -f secret.yaml
-
-kustomize build config | sudo kubectl apply -f -
 
 kubectl apply -f config/master-user-data-secret.yaml
 kubectl apply -f config/master-machine.yaml
@@ -140,7 +141,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: worker-user-data-secret
-  namespace: default
+  namespace: aws-provider
 type: Opaque
 data:
   userData: \$(cat /root/workerset-user-data.sh | base64 --w=0)
